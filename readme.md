@@ -6,6 +6,7 @@ A simple app to demonstrate callbacks with the Meraki API.
 The app makes an API request to Meraki, providing a callback URL to this app.
 Once the request has completed, Meraki sends a webhook to the callback URL and the results are displayed on the web page. Websockets are used to enable the front-end app to communicate with the backend server. The communication with Meraki is provided by the Meraki REST API and exposing a REST endpoint to receive webhook posts from Meraki 
 
+<img src="./screenshots/livetools-callbacks-demo.gif" width=80%/>
 
 
 # Setup
