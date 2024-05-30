@@ -1,0 +1,463 @@
+<html>
+
+<head>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+</head>
+
+<body>
+
+  <div id="app">
+
+    <!-- Title -->
+    <section class="hero meraki-green-background">
+      <div class="hero-body">
+        <div class="container">
+          <h1 class="title">
+            Meraki Callbacks Demo
+          </h1>
+          <h2 class="subtitle">
+            A simple app to demonstrate using Live Tools with Callbacks.
+          </h2>
+        </div>
+      </div>
+    </section>
+    <div class="container">
+
+      <!-- Ping Device Live Tool -->
+      <div class="section">
+
+        <div class="columns">
+
+          <div class="column">
+            <div class="tile">
+
+              <article class="tile is-child notification is-light">
+                <form>
+                  <p class="title">Ping Device</p>
+                  <div class="field">
+                    <label class="label">Serial</label>
+                    <div class="control">
+                      <input class="input" type="text" v-model="form.serial" />
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label class="label">Count</label>
+                    <div class="control">
+                      <input class="input" type="text" v-model="form.count" />
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label class="label">Callback URL</label>
+                    <div class="control">
+                      <input disabled class="input" type="text" v-model="form.callback.url" />
+                    </div>
+                  </div>
+
+
+
+                  <input class="button margin-bottom" type="submit" @click.prevent="onSubmit()" />
+
+                  <progress v-if="loading" class="progress is-small is-warning mt-2" max="100">15%</progress>
+
+                </form>
+              </article>
+            </div>
+            <br>
+
+          </div>
+
+          <div class="column">
+            <div class="card">
+              <header class="card-header has-background-light has-text-white">
+                <p class="card-header-title">Results</p>
+
+              </header>
+
+              <div v-if="message.results.latencies?.minimum" class="card-content">
+                <div class="columns">
+                  <div class="column ">
+                    <div class="ping-card-row">
+
+                      <div class="ping-card-label">Serial:</div>
+                      <div class="ping-card-value"> {{ message.request.serial }}</div>
+                    </div>
+                    <div class="ping-card-row">
+                      <div class="ping-card-label">Sent At:</div>
+                      <div class="ping-card-value"> {{webhookData.sentAt}}</div>
+                    </div>
+                  </div>
+
+                </div>
+
+                <div class="columns">
+                  <div class="column is-4" >
+                    
+                    <div class="ping-card-row">
+                      <div class="ping-card-label">Sent:</div>
+                      <div class="ping-card-value">{{ message.results.sent }}</div>
+                    </div>
+                    <div class="ping-card-row">
+                      <div class="ping-card-label">Received:</div>
+                      <div class="ping-card-value">{{ message.results.received }}</div>
+                    </div>
+                    <div class="ping-card-row">
+                      <div class="ping-card-label">Loss:</div>
+                      <div class="ping-card-value">{{ message.results.loss.percentage }}%</div>
+                    </div>
+                  </div>
+                  <div class="column is-4">
+                    <div class="ping-card-row">
+                      <div class="ping-card-label">Minimum:</div>
+                      <div class="ping-card-value">{{ message.results.latencies?.minimum }}ms</div>
+                    </div>
+                    <div class="ping-card-row">
+                      <div class="ping-card-label">Average:</div>
+                      <div class="ping-card-value">{{ message.results.latencies.average }}ms</div>
+                    </div>
+                    <div class="ping-card-row">
+                      <div class="ping-card-label">Maximum:</div>
+                      <div class="ping-card-value">{{ message.results.latencies.maximum }}ms</div>
+                    </div>
+                  </div>
+                </div>
+
+
+
+
+                <div class="columns">
+                  <div class="column">
+
+                    <div class="ping-card-row">
+
+                      <table class="table is-fullwidth " v-if="message.results">
+                        <thead c>
+                          <tr>
+                            <th>Sequence ID</th>
+                            <th>Size</th>
+                            <th>Latency</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr v-for="reply in message.results.replies" :key="reply.sequenceId">
+                            <td>{{ reply.sequenceId }}</td>
+                            <td>
+                              <div class="ping-card-value">{{ reply.size }} bytes</div>
+                            </td>
+                            <td>
+                              <div class="ping-card-value">{{ reply.latency }} ms</div>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+                <!-- <a :href="message.url" class="card-footer-item">View Results</a> -->
+
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- RESPONSE RAW OUTPUT -->
+      <div class="section">
+        
+        <h3 class="subtitle">
+          Results of the Meraki API request with instructions to "callback" this app by sending a webhook with the
+          results.
+        </h3>
+        <div class="columns">
+
+          <div class="column">
+            <div class="card">
+              <header class="card-header has-background-light has-text-white">
+                <p class="card-header-title">Request</p>
+              </header>
+              <div class="card-content">
+                <pre>{{ form }}</pre>
+              </div>
+            </div>
+     
+            <div class="card">
+              <header class="card-header has-background-light has-text-white">
+                <p class="card-header-title">Response</p>
+              </header>
+              <div class="card-content">
+                <pre>{{ requestResponse }}</pre>
+              </div>
+            </div>
+          </div>
+
+          <div class="column">
+            <div class="card">
+              <header class="card-header has-background-light has-text-white">
+                <p class="card-header-title">Callback (Webhook)</p>
+              </header>
+              <div class="card-content">
+                <pre style="height:800px;overflow:auto">{{ callbackResponse }}</pre>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Connection Details -->
+        <span v-if="isConnected" class="tag is-success is-normal">WS Connected</span>
+        <span v-else="isConnected" class="tag is-fail is-normal">WS Not Connected</span>
+      </div>
+    </div>
+  </div>
+
+
+
+
+
+      <script src="https://unpkg.com/vue@2"></script>
+
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.3.4/axios.min.js"
+        integrity="sha512-LUKzDoJKOLqnxGWWIBM4lzRBlxcva2ZTztO8bTcWPmDSpkErWx0bSP4pdsjNH8kiHAUPaT06UXcb+vOEZH+HpQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+
+
+      <script>
+        let hostBaseUrl = `${window.location.protocol}//${window.location.host}`
+        let callbackUrl = `${hostBaseUrl}/callbackDemo/callbackReceiver`
+        let wsUrl = `wss://${window.location.host}/ws/callbackDemo`
+        new Vue({
+          el: '#app',
+          components: {
+
+          },
+          data() {
+            return {
+              form: {
+                serial: 'Q2RD-4E2X-E4YY',
+                count: 3,
+                callback: {
+                  url: callbackUrl
+                }
+              },
+
+              requestResponse: "",
+              callbackResponse: "",
+              isConnected: false,
+              wsUrl: wsUrl,
+              loading: false,
+              webhookData: {},
+              message: {
+                request: {},
+                results: {
+                  latencies: {},
+                  loss: {},
+                  replies: []
+                }
+
+              }
+
+            }
+          },
+          computed: {
+            socket() {
+              return new WebSocket(this.wsUrl);
+            },
+            maxLatency() {
+              // Find the maximum latency to set the progress bar's max value
+              return Math.max(...this.message.results.replies.map(reply => reply.latency));
+            }
+          },
+          methods: {
+            /*
+            onSubmit() {
+                let data = JSON.stringify(this.form);
+                console.log('submitting data', data);
+                this.socket.send(data);
+            }
+            */
+            onSubmit() {
+              this.loading = true;
+              this.requestResponse = "";
+              this.callbackResponse = "";
+              console.log('onSubmit this.form', this.form);
+              axios.post(`${hostBaseUrl}/callbackDemo/pingDevice`, this.form).then(res => {
+                console.log('post res', res.data)
+                this.requestResponse = res.data;
+              });
+            }
+          },
+          created() {
+            this.socket.onopen = () => {
+              console.log('socket open');
+              this.isConnected = true;
+            };
+            this.socket.onclose = () => {
+              this.isConnected = false;
+            };
+            this.socket.onmessage = (msg) => {
+              console.log('socket message', msg)
+              const data = JSON.parse(msg.data)
+              this.callbackResponse = JSON.stringify(data, null, 2);
+              this.webhookData = data
+              this.message = data['message'];
+
+              this.loading = false;
+            };
+          }
+        });
+
+      </script>
+
+</body>
+<style scoped>
+  .ping-card-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .ping-card-label {
+    font-weight: bold;
+    margin-right: 10px;
+  }
+
+  .ping-card-value {
+    font-weight: normal;
+  }
+
+  pre {
+    font-size: 11px;
+    background-color: #44a93617;
+  }
+
+  /* Meraki Branding */
+  body {
+    background-color: #f5f6f7;
+  }
+
+  .section {
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0px 3px 6px #00000029;
+    padding: 20px;
+    margin: 20px auto;
+
+  }
+
+  .hero .title {
+    font-size: 36px;
+    font-weight: bold;
+    color: #ffffff;
+    margin-bottom: 20px;
+  }
+
+  .hero .subtitle {
+    color: #ffffff;
+  }
+
+  .label {
+    font-weight: bold;
+    color: #354052;
+    margin-bottom: 5px;
+  }
+
+  .button {
+    background-color: #056CD1;
+    color: #ffffff;
+    border: #6277e2;
+    border-radius: 5px;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    margin-top: 10px;
+    margin-right: 10px;
+  }
+
+  .button:hover {
+    background-color: #235EC4;
+    color: #ffffff;
+  }
+
+  .is-warning {
+    background-color: #fecd08;
+    color: #ffffff;
+  }
+
+  .card-header {
+    background-color: #0095d5;
+    color: #ffffff;
+    font-size: 20px;
+    font-weight: bold;
+    padding: 10px;
+  }
+
+  .card-header-title {
+    margin: 0;
+  }
+
+  .ping-card-row {
+    display: flex;
+    margin-bottom: 10px;
+  }
+
+  .ping-card-label {
+    font-weight: bold;
+    color: #354052;
+    width: 120px;
+    margin-right: 10px;
+  }
+
+  .navbar {
+    background-color: #67b346;
+  }
+
+  .ping-card-value {
+    color: #0095d5;
+  }
+
+  .table thead th {
+    background-color: #f5f5f5;
+    color: #000000;
+    font-weight: bold;
+    font-size: 16px;
+    padding: 10px;
+    text-align: left;
+
+  }
+
+  .table tbody td {
+    padding: 10px;
+    font-size: 14px;
+    color: #354052;
+    border-top: none;
+  }
+
+  .tag {
+    font-weight: bold;
+    font-size: 16px;
+    margin-top: 10px;
+  }
+
+  .is-success {
+    background-color: #00d1b2;
+    color: #ffffff;
+  }
+
+  .is-fail {
+    background-color: #ff3860;
+    color: #ffffff;
+  }
+
+  .is-primary {
+    background-color: rgb(69 169 54) 5.72%, rgb(32, 171, 78) 93.76%;
+
+  }
+
+  .meraki-green-background {
+    background-color: #45A936;
+    color: #f5f6f7;
+  }
+</style>
+
+</html>

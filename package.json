@@ -1,0 +1,22 @@
+{
+  "name": "meraki-callback-demo",
+  "version": "1.0.0",
+  "description": "A simple app to demonstrate Meraki callbacks. The app uses an express server to provide the webhook listener and front-end VueJS web app.",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js -t"
+  },
+  "author": "Cory Guynn",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.5.1",
+    "body-parser": "^1.20.2",
+    "commander": "^11.1.0",
+    "express": "^4.18.2",
+    "http": "^0.0.1-security",
+    "localtunnel": "^2.0.2",
+    "request": "^2.88.2",
+    "ws": "^8.13.0"
+  }
+}
