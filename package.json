@@ -1,5 +1,5 @@
 {
-  "name": "meraki-callback-demo",
+  "name": "meraki-callback-ping-demo",
   "version": "1.0.0",
   "description": "A simple app to demonstrate Meraki callbacks. The app uses an express server to provide the webhook listener and front-end VueJS web app.",
   "main": "server.js",
